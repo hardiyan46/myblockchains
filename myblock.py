@@ -57,7 +57,7 @@ class Blockchain(object):
         return block
 
     def add_transaction(self, sender, recipient, amount):
-        self.current_transactions.append({
+        self.current_transaction.append({
             'amount': amount,
             'recipient': recipient,
             'sender': sender
@@ -72,7 +72,7 @@ node_identifier = str(uuid4()).replace('_', "")
 blockchain = Blockchain()
 
 #routes URL
-@app.route('/blockshain', methods=['GET'])
+@app.route('/blockchain', methods=['GET'])
 def full_chain():
     response = {
         'chain': blockchain.chain,
@@ -116,4 +116,4 @@ def new_transaction():
     return (jsonify(response), 201)
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=int(sys.argv[1]))
+    app.run(host='0.0.0.0', port=int(sys.argv[1]))
