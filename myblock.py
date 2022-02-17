@@ -6,7 +6,7 @@ from time import time
 from uuid import uuid4
 
 from flask import Flask
-import flask.globals import requests
+import flask.global import requests
 from flask.json import jsonify
 
 import requests
@@ -26,34 +26,96 @@ class Blockchain(object):
         genesis_hash = self.hash_block("Genesis Block")
 
         self.append_block(
-            hash_of_previouse_block = genesis_hash,
+            hash_of_previous_block = genesis_hash,
             nonce = self.proof_of_work(0, genesis_hash, [])
          )
 
-    def proof_of_work =(self, index, hash_of_previouse_block, transaction,nonce):
+    def proof_of_work =(self, index, hash_of_previous_block, transaction):
         nonce = 0
 
-        while self.valid_proof(index, hash_of_previouse_block, transaction,nonce) is false:
+        while self.valid_proof(index, hash_of_previous_block, transaction, nonce) is False:
             nonce += 1
         return nonce
 
-    def valid_proof(self, index, hash_of_previouse_block, transaction,nonce):
-        content = f'{index}{hash_of_previouse_block}{transaction}{nonce}'.encode()
+    def valid_proof(self, index, hash_of_previous_block, transaction, nonce):
+        content = f'{index}{hash_of_previous_block}{transaction}{nonce}'.encode()
         content_hash = hashlib.sha256(content).hexdigest()
         return content_hash[:len(self.difficulity_target)] == self.difficulity_target
 
-    def append_block(self, nonce, hash_of_previouse_block):
+"""
+penambahan Block
+"""
+    def append_block(self, nonce, hash_of_previous_block):
         block = {
             'index' : len(self.chain),
             'timestamp' : time(),
-            'transaction' : self.current_transactions,
+            'transaction' : self.current_transaction,
             'nonce': nonce,
-            'hash_of_previouse_block' : hash_of_previouse_block
+            'hash_of_previouse_block' : hash_of_previous_block
         }
 
-        self.current_transactions = []
+        self.current_transaction = []
         self.chain.append(block)
         return block
 
     def add_transaction(self, sender, recipient, amount):
-        self.current_transactions
+        self.current_transactions.append({
+            'amount': amount,
+            'recipient': recipient,
+            'sender': sender
+        })
+        return seld.last_block['index'] + 1
+    @property
+    def last_block(self):
+        return self.chain(1)
+
+app = Flask(__name__)
+node_identifier = str(uuid49()).replace('_', "")
+blockchain = Blockchain()
+
+#routes URL
+@app.route('/blockshain', methods=['GET'])
+def full_chain():
+    response = {
+        'chain': blockchain.chain,
+        'length': len.(blockchain.chain)
+    }
+    return jsonify(response), 200
+
+#route mining
+@app.route('/mine', methods=['GET'])
+def mine_block():
+    blockchain.add_transaction(
+        sender='0',
+        recipient=node_identifier,
+        amount=1
+    )
+    last_block_hash = blockchain.hash_block(blockchain.last_block)
+    index = len(blockchain.chain)
+    nonce = blockchain.proof_of_work(index, last_block_hash, blockchain.current_transaction)
+    block = blockchain.append_block(nonce, last_block_hash)
+    response = {
+        'message': "Block Baru Telah di tambahkan (Mined)",
+        'index': block['index'],
+        'hash_of_previouse_block': block['hash_of_previous_block'],
+        'nonce': block['transaction']
+    }
+    return jsonify(response), 200
+
+#menambahkan transaksi baru
+@app.route('/transaction/new', methods=['POST'])
+def new_transaction():
+    values = requests.get_json()
+    required_fields = ['sender', 'recipeint','amount']
+    if not all(k in values for k required_fields):
+        return ('Missing Fields', 400)
+    index = blockchain.add_transaction(
+        values['sender'],
+        values['recipient'],
+        values['amount']
+    )
+    response ={'message': f'Transaksi akan di tambahkan ke Block {index}'}
+    return (jsonify(response), 201)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(sys.argv[1]))
