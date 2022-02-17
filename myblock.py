@@ -6,14 +6,14 @@ from time import time
 from uuid import uuid4
 
 from flask import Flask
-import flask.global import requests
+from flask.globals import request
 from flask.json import jsonify
 
 import requests
 from urllib.parse import urlparse
 
 class Blockchain(object):
-    difficulity_target = "0000"
+    difficulty_target = "0000"
 
     def hash_block(self, block):
         block_encoded = json.dumps(block, sort_keys=True).encode()
@@ -22,15 +22,15 @@ class Blockchain(object):
     def __init__(self):
         self.chain = []
 
-        self.current_transactions= []
-        genesis_hash = self.hash_block("Genesis Block")
+        self.current_transaction= []
+        genesis_hash = self.hash_block("genesis_block")
 
         self.append_block(
             hash_of_previous_block = genesis_hash,
             nonce = self.proof_of_work(0, genesis_hash, [])
          )
 
-    def proof_of_work =(self, index, hash_of_previous_block, transaction):
+    def proof_of_work (self, index, hash_of_previous_block, transaction):
         nonce = 0
 
         while self.valid_proof(index, hash_of_previous_block, transaction, nonce) is False:
@@ -40,18 +40,16 @@ class Blockchain(object):
     def valid_proof(self, index, hash_of_previous_block, transaction, nonce):
         content = f'{index}{hash_of_previous_block}{transaction}{nonce}'.encode()
         content_hash = hashlib.sha256(content).hexdigest()
-        return content_hash[:len(self.difficulity_target)] == self.difficulity_target
+        return content_hash[:len(self.difficulty_target)] == self.difficulty_target
 
-"""
-penambahan Block
-"""
+#tambahkan block
     def append_block(self, nonce, hash_of_previous_block):
         block = {
             'index' : len(self.chain),
             'timestamp' : time(),
             'transaction' : self.current_transaction,
             'nonce': nonce,
-            'hash_of_previouse_block' : hash_of_previous_block
+            'hash_of_previous_block' : hash_of_previous_block
         }
 
         self.current_transaction = []
@@ -64,13 +62,13 @@ penambahan Block
             'recipient': recipient,
             'sender': sender
         })
-        return seld.last_block['index'] + 1
+        return self.last_block['index'] + 1
     @property
     def last_block(self):
         return self.chain(1)
 
 app = Flask(__name__)
-node_identifier = str(uuid49()).replace('_', "")
+node_identifier = str(uuid4()).replace('_', "")
 blockchain = Blockchain()
 
 #routes URL
@@ -78,7 +76,7 @@ blockchain = Blockchain()
 def full_chain():
     response = {
         'chain': blockchain.chain,
-        'length': len.(blockchain.chain)
+        'length': len(blockchain.chain)
     }
     return jsonify(response), 200
 
@@ -107,7 +105,7 @@ def mine_block():
 def new_transaction():
     values = requests.get_json()
     required_fields = ['sender', 'recipeint','amount']
-    if not all(k in values for k required_fields):
+    if not all(k in values for k in required_fields):
         return ('Missing Fields', 400)
     index = blockchain.add_transaction(
         values['sender'],
@@ -118,4 +116,4 @@ def new_transaction():
     return (jsonify(response), 201)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(sys.argv[1]))
+    app.run(host='127.0.0.1', port=int(sys.argv[1]))
